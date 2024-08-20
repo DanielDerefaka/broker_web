@@ -27,13 +27,7 @@ const AdminCard = async () => {
               Daywise overall deposit & withdraw.
             </p>
             <div>
-              <DailyInsightChart
-                data={data}
-                deposit={(await databaseData).deposits._sum.amount}
-                withdraw={(await databaseData).withdrawals._sum.amount}
-                lastMonthDeposit={(await databaseData).lastMonthDeposits._sum.amount}
-                lastMonthWithdraw={(await databaseData).withdrawals._sum.amount}
-              />
+             
             </div>
           </div>
         </div>
