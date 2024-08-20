@@ -845,3 +845,17 @@ export const handlesus = async (id: string) => {
     throw error;
   }
 };
+
+
+
+
+
+export const getAlTransactions = await client.transaction.findMany({
+  where: {
+    userId: authUser.id,
+  },
+  orderBy: {
+    createdAt: "desc", // Order by createdAt in descending order to get the latest deposits first
+  },
+  take: 4, // Limit the number of deposits to 4
+});
