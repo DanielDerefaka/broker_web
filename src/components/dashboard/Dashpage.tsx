@@ -2,13 +2,10 @@
 import DashboardCard from "@/components/dashboard/card";
 import LandingTrading from "@/components/dashboard/TradingContainer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import InfoBar from "@/components/Infobar";
 import { Separator } from "@/components/ui/separator";
 import { WalletIcon } from "@/icons/balance-icon";
 import CalIcon from "@/icons/cal-icon";
 import { DepositIcon } from "@/icons/deposit-icon";
-import EmailIcon from "@/icons/email-icon";
-import PersonIcon from "@/icons/person-icon";
 import { ReferralsIcon } from "@/icons/Referral-icon";
 import { TransactionsIcon } from "@/icons/transactions-icon";
 import { WithdrawalIcon } from "@/icons/withdrawal-icon";
@@ -19,38 +16,16 @@ import React from "react";
 import { currentUser } from "@clerk/nextjs";
 import { client } from "@/lib/prisma";
 import { format } from "date-fns";
-import { TotalDepo, TotalWithdraw } from "@/lib/queries";
+import { getAlTransactions, getBalance, TotalDepo, TotalWithdraw } from "@/lib/queries";
 
 
 
 const Dashpage = async () => {
-  // const clients = await getUserClients()
-  // const sales = await getUserBalance()
-  // const bookings = await getUserAppointments()
-  // const plan = await getUserPlanInfo()
-  // const transactions = await getUserTransactions()
-  // const products = await getUserTotalProductPrices()
 
-  const authUser = await currentUser();
-  if (!authUser) return null;
+  const getBalances = await getBalance()
+  if (!getBalances) return null;
 
-  const getBalance = await client.user.findUnique({
-    where: {
-      clerkId: authUser.id,
-    },
-  });
-  if (!getBalance) return null;
-
-  const getAllTransaction = await client.transaction.findMany({
-    where: {
-      userId: authUser.id,
-    },
-    orderBy: {
-      createdAt: "desc", // Order by createdAt in descending order to get the latest deposits first
-    },
-    take: 4, // Limit the number of deposits to 4
-  });
-
+const getAllTransaction  = await getAlTransactions()
   if (!getAllTransaction) return null;
 
   const getNumberofDepo = await TotalDepo();
@@ -60,10 +35,10 @@ const Dashpage = async () => {
   return (
     <>
   
-      <div className="overflow-y-auto w-full chat-window flex-1 h-0">
+      <div className="">
         <div className="flex gap-5 flex-wrap">
           <DashboardCard
-            value={getBalance.balance}
+            value={getBalances.balance}
             sales
             title="Available Balance"
             icon={<WalletIcon />}

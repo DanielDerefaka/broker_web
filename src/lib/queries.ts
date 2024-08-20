@@ -850,3 +850,30 @@ export const handlesus = async (id: string) => {
 
 
 
+
+
+export const getAlTransactions = async ( ) => {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error('Current user not found.');
+    }
+
+    const getTransaction = await client.transaction.findMany({
+      where: {
+        userId: user.id,
+      },
+      orderBy: {
+        createdAt: "desc", // Order by createdAt in descending order to get the latest deposits first
+      },
+      take: 4, // Limit the number of deposits to 4
+    });
+  
+    
+
+    return getTransaction;
+  } catch (error) {
+    console.error('Error creating deposit:', error);
+    throw error;
+  }
+};
