@@ -21,9 +21,9 @@ import { client } from "@/lib/prisma";
 import { format } from "date-fns";
 import { TotalDepo, TotalWithdraw } from "@/lib/queries";
 
-type Props = {};
 
-const page = async (props: Props) => {
+
+const page = async () => {
   // const clients = await getUserClients()
   // const sales = await getUserBalance()
   // const bookings = await getUserAppointments()
