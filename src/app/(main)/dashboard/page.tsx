@@ -6,10 +6,7 @@ import React from 'react'
 const page = () => {
   return (
     <div>
-        <Infobar/>
-
-        {/* <Dash/> */}
-        <Dashpage/>
+        danieldx
     </div>
   )
 }
