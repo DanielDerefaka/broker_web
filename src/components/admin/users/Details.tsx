@@ -5,6 +5,7 @@ import {
   Transaction,
   Investment,
   Referral,
+  KYCVerification,
 } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,6 +19,11 @@ import {
   Repeat,
   ChevronRight,
 } from "lucide-react";
+import Image from "next/image";
+import { getAllKyc, getAllKycId } from "@/lib/queries";
+import Link from "next/link";
+import KYCVerificationById from "../kyc/KycVerDetails";
+import UpdateBalance from "./UpdateBalance";
 
 interface UserDetailsProps {
   user: User & {
@@ -25,10 +31,17 @@ interface UserDetailsProps {
     transactions: Transaction[];
     investments: Investment[];
     referrals: Referral[];
+    kycVerification: KYCVerification | null;
   };
 }
 
-const UserDetails: React.FC<UserDetailsProps> = ({ user }) => {
+const UserDetails: React.FC<UserDetailsProps> = async ({ user }) => {
+  const userId = user.clerkId;
+
+  const kycver = await getAllKycId(userId);
+
+  if (!kycver) return null;
+
   return (
     <div className="p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -46,6 +59,8 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user }) => {
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
+
+       
       </div>
 
       <Tabs defaultValue="personal" className="mb-8">
@@ -74,7 +89,15 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user }) => {
           >
             Referrals
           </TabsTrigger>
-          
+
+          <TabsTrigger
+            value="bal"
+            className="rounded-full hidden md:flex px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+          >
+            Update Balance
+          </TabsTrigger>
+
+         
         </TabsList>
 
         {/* Personal Information Tab */}
@@ -280,7 +303,7 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user }) => {
                   <div className="mt-8 space-y-3">
                     {[
                       { icon: Mail, text: "Send Email" },
-                      { icon: UserCircle, text: "Login as User" },
+                      { icon: UserCircle, text: "Update Balance" },
                       { icon: Shield, text: "Check API Access" },
                       { icon: Repeat, text: "Reset 2FA" },
                     ].map((item, index) => (
@@ -448,6 +471,48 @@ const UserDetails: React.FC<UserDetailsProps> = ({ user }) => {
                       </li>
                     ))}
                   </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="kyc">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-3">
+              <Card className="bg-white shadow-lg rounded-2xl overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Kyc Verification</CardTitle>
+                  <p className="text-sm text-gray-600">User kyc application</p>
+                </CardHeader>
+                <CardContent className="p-6">
+                 
+                    <div>
+                      <div className="flex gap-5">
+                        <div>
+                        <KYCVerificationById  userId={user.clerkId}/>
+
+                        </div>
+                      </div>
+                    </div>
+               
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="bal">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-3">
+              <Card className="bg-white shadow-lg rounded-2xl overflow-hidden">
+                <CardHeader>
+                  <CardTitle className="text-2xl">Update Balance</CardTitle>
+                  {/* <p className="text-sm text-gray-600">User kyc application</p> */}
+                </CardHeader>
+                <CardContent className="p-6">
+                 
+                    <UpdateBalance  userId={user.clerkId}/>
                 </CardContent>
               </Card>
             </div>

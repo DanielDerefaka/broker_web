@@ -1,6 +1,6 @@
 // components/CopyBox.tsx
 import React, { useState } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { Check, ClipboardIcon, Copy } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 interface CopyBoxProps {
@@ -8,34 +8,27 @@ interface CopyBoxProps {
   className?: string;
 }
 
-const CopyBox: React.FC<CopyBoxProps> = ({ value, className }) => {
-  const [copied, setCopied] = useState(false);
-
+const CopyBox = ({ value, onCopy }:any) => {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (onCopy) onCopy();
   };
 
   return (
-    <div className={cn(
-      "flex items-center justify-between px-3 py-2 rounded-md bg-gray-100 border border-gray-300 w-full",
-      className
-    )}>
-      <span className="text-sm text-gray-600 truncate w-full">{value}</span>
+    <div className="relative">
+      <input
+        type="text"
+        value={value}
+        readOnly
+        className="w-full pr-10 bg-gray-100 border text-black border-gray-300 rounded-md py-2 px-3 text-sm"
+      />
       <button
         onClick={handleCopy}
-        className="ml-2 p-1 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
-        aria-label="Copy to clipboard"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2"
       >
-        {copied ? (
-          <Check className="h-4 w-4 text-green-500" />
-        ) : (
-          <Copy className="h-4 w-4 text-gray-500" />
-        )}
+        <ClipboardIcon className="h-5 w-5 text-gray-500" />
       </button>
     </div>
   );
 };
-
 export default CopyBox;

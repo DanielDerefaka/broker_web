@@ -14,10 +14,10 @@ const AdminCard = async () => {
     { date: "05 Aug", value: 5000 },
   ];
   return (
-    <div className="p-3 flex flex-col items-center h-full">
-      <div></div>
+    <div className="flex flex-col items-center h-full">
+   
 
-      {/* <div className="w-full grid grid-cols-1  gap-4 lg:grid-cols-2 py-10"> */}
+
 
       <div className="flex flex-col md:flex-row gap-5 mt-10">
         <div className=" rounded-sm flex flex-col gap-3 pr-10 pl-10 py-10 md:pl-10 md:pr-20 border-[1px] border-border bg-white dark:bg-muted md:w-full w-full">

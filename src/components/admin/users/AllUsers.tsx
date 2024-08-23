@@ -27,7 +27,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getFilteredUsers, handleActive, handlesus, updateUsersStatus } from "@/lib/queries";
+import {
+  getFilteredUsers,
+  handleActive,
+  handlesus,
+  updateUsersStatus,
+} from "@/lib/queries";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -40,12 +45,15 @@ import { TransactionsIcon } from "@/icons/transactions-icon";
 import EmailIcon from "@/icons/email-icon";
 import Link from "next/link";
 import { useToast } from "@/components/ui/use-toast";
+import UpdateBalance from "./UpdateBalance";
 
-type UserWithoutSensitiveInfo = Omit<User, "password" >;
+type UserWithoutSensitiveInfo = Omit<User, "password">;
 
 const AllUsers = () => {
   const [users, setUsers] = useState<UserWithoutSensitiveInfo[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [isUpdateBalanceOpen, setIsUpdateBalanceOpen] = useState(false);
+
   const [filter, setFilter] = useState({
     hasBalance: false,
     kycApproved: false,
@@ -62,7 +70,7 @@ const AllUsers = () => {
     setUsers(filteredUsers);
   }
 
-  const {toast} = useToast()
+  const { toast } = useToast();
   function getColorClass(string: any) {
     const colors = [
       "bg-red-500",
@@ -91,15 +99,11 @@ const AllUsers = () => {
     setSelectedUsers([]);
   }
 
-
   const handleApprove = async (id: string) => {
     try {
       await handleActive(id);
-   
-
 
       toast({
-  
         title: "Approved ",
         description: "Transaction Approval Sucessful",
       });
@@ -116,9 +120,8 @@ const AllUsers = () => {
   const handleSuspend = async (id: string) => {
     try {
       await handlesus(id);
-    
+
       toast({
-    
         title: "Sucess!!!",
         // description: "Could not make a deposit",
       });
@@ -131,7 +134,6 @@ const AllUsers = () => {
       });
     }
   };
-
 
   return (
     <div className="p-4">
@@ -245,24 +247,41 @@ const AllUsers = () => {
                       <Button variant="ghost">•••</Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-40">
-                      <DropdownMenuItem >
-                     <Link href={`/admin/users/${user.id}`} className="gap-1 p-2">
-                     <Eye className="mr-2 h-4 w-4" /> View Details
-                     </Link>
+                      <DropdownMenuItem>
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="gap-1 p-2"
+                        >
+                          <Eye className="mr-2 h-4 w-4" /> View Details
+                        </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                      <Link href={`/admin/users/${user.id}`} className="gap-1 p-2">
-                        <TransactionsIcon /> Transactions
+                        <Link
+                          href={`/admin/users/${user.id}`}
+                          className="gap-1 p-2"
+                        >
+                          <TransactionsIcon /> Transactions
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem className="gap-1 p-2">
-                        <EmailIcon /> Send Email
+                        <Button onClick={() => setIsUpdateBalanceOpen(true)}>
+                           Update Balance
+                        </Button>
+
+                        
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="gap-1 p-2" onClick={() => handleApprove(user.id)}>
+                      <DropdownMenuItem
+                        className="gap-1 p-2"
+                        onClick={() => handleApprove(user.id)}
+                      >
                         <Check className="mr-2 h-4 w-4" /> Active
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <X className="mr-2 h-4 w-4" onClick={() => handleSuspend(user.id)}/> Suspend
+                        <X
+                          className="mr-2 h-4 w-4"
+                          onClick={() => handleSuspend(user.id)}
+                        />{" "}
+                        Suspend
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

@@ -17,6 +17,25 @@ interface UpdateUserInput {
 }
 
 
+export type PlanFormValues = {
+  id?: string;
+  name: string;
+  shortName?: string;
+  description?: string;
+  minAmount: number;
+  maxAmount: number;
+  interestRate: number;
+  interestPeriod: string;
+  payoutTerm: string;
+  termDuration: number;
+  termDurationType: string;
+  isFixedInvestment: boolean;
+  returnCapital: boolean;
+  isFeatured: boolean;
+  isActive: boolean;
+};
+
+
 interface Kyc {
   fullName?: String,
   dateOfBirth?:String,
@@ -877,3 +896,484 @@ export const getAlTransactions = async ( ) => {
     throw error;
   }
 };
+
+
+
+export const getAllKyc = async () => {
+  try {
+    const kyc = await client.kYCVerification.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { user: true },
+    });
+    return kyc;
+  } catch (error) {
+    console.error('Error fetching deposits:', error);
+    return [];
+  }
+};
+
+export const getAllKycId = async (userId:string) => {
+  try {
+    const kyc = await client.kYCVerification.findMany({
+      orderBy: { createdAt: 'desc' },
+      where: {
+        id: userId
+      },
+    });
+    return kyc;
+  } catch (error) {
+    console.error('Error fetching deposits:', error);
+    return [];
+  }
+};
+
+
+export const handleApproved = async (id: string) => {
+  try {
+    const updateStats = await client.kYCVerification.update({
+      where: { id },
+      data: { status: 'APPROVED' },
+    });
+
+
+    if(updateStats) {
+      const updateStat = await client.user.update({
+        where: { clerkId: updateStats.userId },
+        data: { kycApproved: true },
+      });
+  
+    }
+  
+
+ 
+
+    return updateStats;
+  } catch (error) {
+    console.error('Error  Stats:', error);
+    throw error;
+  }
+};
+
+export const handleNotApproved = async (id: string) => {
+  try {
+    const suspend = await client.kYCVerification.update({
+      where: { id },
+      data: { status: 'REJECTED' },
+
+
+    });
+    return suspend;
+  } catch (error) {
+    console.error('Error  Suspending:', error);
+    throw error;
+  }
+};
+
+
+// lib/plans.ts
+
+
+
+export async function createPlan(data: any) {
+  return client.plan.create({
+    data: {
+      name: data.name,
+      shortName: data.shortName,
+      description: data.description,
+      minAmount: data.minAmount,
+      maxAmount: data.maxAmount,
+      interestRate: data.interestRate,
+      interestPeriod: data.interestPeriod,
+      payoutTerm: data.payoutTerm,
+      termDuration: data.termDuration,
+      termDurationType: data.termDurationType,
+      isFixedInvestment: data.isFixedInvestment,
+      returnCapital: data.returnCapital,
+      isFeatured: data.isFeatured,
+      isActive: data.isActive,
+    },
+  });
+}
+
+export async function getAllPlans() {
+  return client.plan.findMany();
+}
+
+
+export const makePlanActive = async (id: string) => {
+  try {
+    const planActive = await client.plan.update({
+      where: { id },
+      data: { isActive: true },
+
+
+    });
+
+
+   
+    return planActive;
+  } catch (error) {
+    console.error('Error making plan Active :', error);
+    throw error;
+  }
+};
+
+export const makePlanNotActive = async (id: string) => {
+  try {
+    const planActive = await client.plan.update({
+      where: { id },
+      data: { isActive: false },
+
+
+    });
+
+
+   
+    return planActive;
+  } catch (error) {
+    console.error('Error making plan not  aCTIVE:', error);
+    throw error;
+  }
+};
+
+export const Deleteplan = async (id: string) => {
+  try {
+    const planActive = await client.plan.delete({
+      where: { id },
+
+
+    });
+
+
+    return planActive;
+  } catch (error) {
+    console.error('Error making plan not  aCTIVE:', error);
+    throw error;
+  }
+};
+
+
+export async function updatePlan(id: string, plan: PlanFormValues): Promise<PlanFormValues> {
+  return client.plan.update({
+    where: { id },
+    data: plan,
+  });
+}
+
+
+
+// Get all active investment plans
+export async function getActivePlans() {
+  return client.plan.findMany({
+    where: { isActive: true },
+  });
+}
+// Create a new investment
+export async function createInvestment(userId:string, planId: string, amount: number) {
+  try {
+ 
+
+    const plan = await client.plan.findUnique({ where: { id: planId } });
+    if (!plan) throw new Error("Plan not found");
+
+    const user = await client.user.findUnique({
+      where: { clerkId: userId },
+    });
+    
+    if (!user) throw new Error("User not found");
+
+    if (user.balance < amount) throw new Error("Insufficient balance");
+    if (amount < plan.minAmount || amount > plan.maxAmount) throw new Error("Invalid investment amount");
+
+    const endDate = calculateEndDate(plan.termDuration, plan.termDurationType);
+
+    return client.$transaction(async (tx) => {
+      // Create the investment
+      const investment = await tx.investment.create({
+        data: {
+          
+          userId,
+          planId,
+          amount,
+          endDate,
+        },
+      });
+
+      // Deduct the amount from user's balance
+      await tx.user.update({
+        where: { clerkId: userId },
+        data: { balance: { decrement: amount } },
+      });
+
+
+      const transactionDetails = await client.transaction.create({
+        data: {
+          id: userId,
+          amount:  amount, 
+          status: "COMPLETED",
+          userId: userId,
+          type: "INVESTMENT",
+        },
+      });
+      return investment;
+    });
+  } catch (error) {
+    // Log the error for debugging purposes
+    console.error('Error creating investment:', error);
+
+    // Rethrow the error or handle it as needed
+    throw error;
+  }
+}
+// Calculate interest for active investments
+export async function calculateInterest() {
+  const activeInvestments = await client.investment.findMany({
+    where: { status: "ACTIVE" },
+    include: { plan: true },
+  });
+
+  for (const investment of activeInvestments) {
+    const interestRate = investment.plan.interestRate / 100; // Convert percentage to decimal
+    const dailyRate = interestRate / 365; // Assuming yearly rate
+    const daysActive = Math.floor((Date.now() - investment.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const interest = investment.amount * dailyRate * daysActive;
+
+    await client.investment.update({
+      where: { id: investment.id },
+      data: { accumulatedInterest: interest },
+    });
+
+    if (new Date() >= investment.endDate) {
+      await completeInvestment(investment.id);
+    }
+  }
+}
+
+// Complete an investment
+async function completeInvestment(investmentId: string) {
+  const investment = await client.investment.findUnique({
+    where: { id: investmentId },
+    include: { plan: true, user: true },
+  });
+
+  if (!investment) throw new Error("Investment not found");
+
+  const totalReturn = investment.amount + investment.accumulatedInterest;
+
+  await client.$transaction(async (tx) => {
+    // Update investment status
+    await tx.investment.update({
+      where: { id: investmentId },
+      data: { status: "COMPLETED" },
+    });
+
+    // Return funds to user
+    await tx.user.update({
+      where: { id: investment.userId },
+      data: { balance: { increment: totalReturn } },
+    });
+  });
+}
+
+// Helper function to calculate end date
+function calculateEndDate(duration: number, durationType: string): Date {
+  const endDate = new Date();
+  switch (durationType) {
+    case "days":
+      endDate.setDate(endDate.getDate() + duration);
+      break;
+    case "weeks":
+      endDate.setDate(endDate.getDate() + duration * 7);
+      break;
+    case "months":
+      endDate.setMonth(endDate.getMonth() + duration);
+      break;
+    case "years":
+      endDate.setFullYear(endDate.getFullYear() + duration);
+      break;
+    default:
+      throw new Error("Invalid duration type");
+  }
+  return endDate;
+}
+
+
+
+
+export async function getInvestments(userId: string) {
+  try {
+    const investments = await client.investment.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        plan: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    return investments;
+  } catch (error) {
+    console.error('Error fetching investments:', error);
+    throw error;
+  
+}
+}
+
+
+export async function getUserInvestmentData(userId: string) {
+  const investments = await client.investment.findMany({
+    where: { userId: userId },
+    include: { plan: true }
+  });
+
+  const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
+  const totalProfit = investments.reduce((sum, inv) => sum + inv.accumulatedInterest, 0);
+
+  // Get available funds (assuming you have a user balance field)
+  const user = await client.user.findUnique({
+    where: { id: userId },
+    select: { balance: true }
+  });
+
+  return {
+    availableFunds: user?.balance || 0,
+    totalInvested,
+    totalProfit
+  };
+}
+
+
+
+export async function PaymentDc(data: any) {
+
+ 
+
+      try {
+        const paymentMethod = await client.paymentMethod.create({
+          data: {
+            name: data.name,
+            walletAddress: data.walletAddress,
+            currencyId: data.currencyId,
+            isEnabled: data.isEnabled,
+          },
+        });
+  
+        return paymentMethod;
+      } catch (error) {
+        console.error('Error fetching investments:', error);
+        throw error;
+      
+    }
+
+}
+
+
+export async function CurrencydC(data: any) {
+
+ 
+
+  try {
+    const currency = await client.currency.create({
+      data: {
+        name: data.name,
+        symbol: data.symbol,
+        isEnabled: true,
+      },
+    });
+
+    return currency;
+  } catch (error) {
+    console.error('Error fetching investments:', error);
+    throw error;
+  
+}
+
+}
+
+
+
+export async function getAllCurrency() {
+  return client.currency.findMany({
+ 
+  });
+}
+
+export async function getAllPaymentMethods() {
+  return client.paymentMethod.findMany({
+ 
+  });
+}
+
+
+export const getAllInvestment = async () => {
+  try {
+    const transactions = await client.transaction.findMany({
+
+      where: {
+        type: "INVESTMENT"
+      }
+     
+    });
+
+    return transactions;
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    throw error;
+  }
+};
+
+
+
+
+
+export async function updatePaymentMethod(id:string, data: any) {
+
+ 
+
+  try {
+    const currency = await client.paymentMethod.update({
+      where: {
+        id: id
+      },
+      data: {
+        ...data
+      },
+    });
+
+    return currency;
+  } catch (error) {
+    console.error('Error fetching investments:', error);
+    throw error;
+  
+}
+
+}
+
+
+export async function UpdateBal(userId:string, data: number) {
+
+ console.log(data)
+
+  try {
+    const updatedUser = await client.user.update({
+      where: { clerkId: userId },
+
+      data: {
+        balance: {
+          increment: data,
+        },
+      },
+    });
+
+    return updatedUser;
+  } catch (error) {
+    console.error('Error fetching investments:', error);
+    throw error;
+  
+}
+
+}
+
+

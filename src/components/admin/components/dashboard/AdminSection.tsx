@@ -1,14 +1,15 @@
 import React from "react";
 import { TransactionPanel } from "./TransactionFetch";
 import Link from "next/link";
-import InvestmentFetch from "./InvestmentFetch";
+import {InvestmentPanel} from "./InvestmentFetch";
 import { UsersIcon } from "@/icons/adminusers-icon";
 import { ReferralsIcon } from "@/icons/Referral-icon";
-import { getAdminDashboardData, getAllTransactions } from "@/lib/queries";
+import { getAdminDashboardData, getAllInvestment, getAllTransactions } from "@/lib/queries";
 
 const AdminSection = async () => {
     const dashdata = await getAdminDashboardData()
     const transactions = await getAllTransactions()
+    const invest = await getAllInvestment()
 //   const transactions = [
 //     { type: "deposit", amount: 1000, date: "2023-08-01" },
 //     { type: "withdraw", amount: 500, date: "2023-08-02" },
@@ -41,7 +42,7 @@ const AdminSection = async () => {
                 </Link>
               </div>
             </div>
-            <InvestmentFetch />
+            <InvestmentPanel investment={invest} />
           </div>
         </div>
         <div className="flex flex-col gap-5 md:w-[800px] w-full">

@@ -1,5 +1,3 @@
-// components/DepositForm.tsx
-
 "use client";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -26,11 +24,10 @@ import Image from "next/image";
 import CopyBox from "./CopyWallet";
 import { useToast } from "../ui/use-toast";
 import { useRouter } from "next/navigation";
-import { DepositCall } from "@/lib/queries";
+import { DepositCall, getAllCurrency, getAllPaymentMethods } from "@/lib/queries";
 import { v4 } from "uuid";
 import { Deposit } from "@prisma/client";
 import { Spinner } from "../spinner";
-import { currentUser } from "@clerk/nextjs";
 import { UserId } from "@/actions/auth";
 
 type Props = {
@@ -47,35 +44,44 @@ const formSchema = z.object({
 
 const DepositForm: React.FC<Props> = ({ data }) => {
   const [step, setStep] = useState(1);
+  const [currencies, setCurrencies] = useState([]);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [selectedWalletAddress, setSelectedWalletAddress] = useState("");
   const router = useRouter();
-
   const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     mode: "onChange",
     resolver: zodResolver(formSchema),
     defaultValues: {
       amount: data?.amount?.toString() || "",
-      currency: data?.currency || "USDT",
+      currency: data?.currency || "",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
 
   useEffect(() => {
+    const fetchData = async () => {
+      const fetchedCurrencies = await getAllCurrency();
+      setCurrencies(fetchedCurrencies);
+      const fetchedPaymentMethods = await getAllPaymentMethods();
+      setPaymentMethods(fetchedPaymentMethods);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
     if (data) {
       form.reset({
         amount: data.amount?.toString() || "",
-        currency: data.currency || "USDT",
+        currency: data.currency || "",
       });
     }
   }, [data, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-
     const user = await UserId();
-    console.log(user?.user?.clerkId)
-
-
 
     try {
       await DepositCall({
@@ -84,7 +90,7 @@ const DepositForm: React.FC<Props> = ({ data }) => {
         currency: values.currency,
         status: "PENDING",
         createdAt: new Date(),
-        userId: user?.user?.clerkId || null ,
+        userId: user?.user?.clerkId || null,
       });
 
       toast({
@@ -100,6 +106,23 @@ const DepositForm: React.FC<Props> = ({ data }) => {
         description: "Could not make a deposit",
       });
     }
+  };
+
+  const handleCurrencyChange = (currencySymbol:any) => {
+    const selectedCurrency = currencies.find(c => c.symbol === currencySymbol);
+    const selectedPaymentMethod = paymentMethods.find(method => method.currencyId === selectedCurrency?.id);
+    setSelectedWalletAddress(selectedPaymentMethod?.walletAddress || "");
+    form.setValue("currency", currencySymbol);
+    if (step === 1) setStep(2);
+  };
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(selectedWalletAddress);
+    toast({
+      title: "Address copied",
+      description: "The wallet address has been copied to your clipboard.",
+    });
+    form.handleSubmit(onSubmit)();
   };
 
   return (
@@ -136,7 +159,7 @@ const DepositForm: React.FC<Props> = ({ data }) => {
                     <FormItem>
                       <FormLabel>Currency</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={handleCurrencyChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -145,9 +168,11 @@ const DepositForm: React.FC<Props> = ({ data }) => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="USDT">USDT</SelectItem>
-                          <SelectItem value="EUR">BTC</SelectItem>
-                          <SelectItem value="GBP">ETH</SelectItem>
+                          {currencies.map((currency) => (
+                            <SelectItem key={currency.id} value={currency.symbol}>
+                              {currency.name} ({currency.symbol})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -236,18 +261,18 @@ const DepositForm: React.FC<Props> = ({ data }) => {
                     <div className="flex flex-col justify-center items-center">
                       <Image src="/qr.webp" width={100} height={100} alt="qr" />
 
-                      <p className="font-bold text-2xl">
+                      <p className="font-bold text-black text-2xl">
                         {form.getValues("amount")}.00
                       </p>
                     </div>
 
                     <div className="flex flex-col justify-center items-center mt-10">
-                      <p className="text-sm font-bold uppercase">
+                      <p className="text-sm font-bold  text-black ">
                         {form.getValues("currency")} Address
                       </p>
 
                       <div className="flex flex-col w-[50%]">
-                        <CopyBox value="wallet_address_here" />
+                        <CopyBox value={selectedWalletAddress} onCopy={handleCopy} />
                       </div>
                     </div>
                   </div>

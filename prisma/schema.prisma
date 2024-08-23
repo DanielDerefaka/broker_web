@@ -73,7 +73,11 @@ model Deposit {
   userId  String?
   User   User?   @relation(fields: [userId], references: [clerkId],  onDelete: Cascade)
 
+
 }
+
+
+
 
 model Withdrawal {
   id             String     @id @default(uuid())
@@ -86,30 +90,49 @@ model Withdrawal {
 
 }
 
+
+
 model Investment {
-  id          String      @id @default(uuid())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  planId    String
+  plan      Plan     @relation(fields: [planId], references: [id])
+  user        User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
   userId      String
-  plan        Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
-  planId      String
-  amount      Float
-  status      String   // 'active', 'completed', 'cancelled'
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  amount    Float
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  status        InvestmentStatus  @default(ACTIVE) 
+  accumulatedInterest Float @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Plan {
-  id          String        @id @default(uuid())
-  name        String
-  description String?
-  minAmount   Float
-  maxAmount   Float
-  duration    Int          // in days
-  interestRate Float
-  investments Investment[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                String      @id @default(uuid())
+  name              String
+  shortName         String?
+  description       String?
+  minAmount         Float
+  maxAmount         Float
+  duration          Int?        // in days
+  interestRate      Float
+  interestPeriod    String      // e.g., "Hourly", "Daily", "Monthly"
+  payoutTerm        String      // e.g., "Term basis"
+  termDuration      Int
+  termDurationType  String      // e.g., "Hours", "Days", "Months", "Years"
+  capitalReturn     String?      // e.g., "Partial / Each Term", "Full / End of Term"
+  profitAdjust      String?     // e.g., "Hourly (Term basis)", "Daily (Term basis)"
+  isFixedInvestment Boolean     @default(false)
+  returnCapital     Boolean     @default(true)
+  isFeatured        Boolean     @default(false)
+  isActive          Boolean     @default(true)
+  maxInvestmentTimes Int?
+  maxPerUser        Int?
+  investments       Investment[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 }
+
 
 model Referral {
   id          String      @id @default(uuid())
@@ -159,13 +182,26 @@ model SiteSetting {
   updatedAt         DateTime @updatedAt
 }
 
+
+model PaymentMethod {
+  id            String   @id @default(uuid())
+  name          String
+  walletAddress String
+  currency      Currency @relation(fields: [currencyId], references: [id])
+  currencyId    String
+  isEnabled     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model Currency {
-  id        String     @id @default(uuid())
-  name      String
-  symbol    String
-  isEnabled Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String          @id @default(uuid())
+  name           String
+  symbol         String
+  paymentMethods PaymentMethod[]
+  isEnabled      Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Page {
@@ -236,4 +272,10 @@ enum TransactionStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+enum InvestmentStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
 }

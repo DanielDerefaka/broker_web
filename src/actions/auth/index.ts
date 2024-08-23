@@ -115,6 +115,7 @@ export const onLoginUser = async () => {
           fullname: true,
           id: true,
           type: true,
+          clerkId: true
         },
       })
       if (authenticated) {

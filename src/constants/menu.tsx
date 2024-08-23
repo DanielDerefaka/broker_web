@@ -108,7 +108,7 @@ export const ADMIN_SIDE_BAR_MENU:  SIDE_BAR_MENU_PROPS[] = [
   },
   
   {
-    label: 'Profile',
+    label: 'Currency',
     icon: <MyProfileIcon />,
     path: 'admin/profile',
   },
@@ -117,18 +117,12 @@ export const ADMIN_SIDE_BAR_MENU:  SIDE_BAR_MENU_PROPS[] = [
     icon: <OurPlansIcon />,
     path: 'admin/plans',
   },
-
   {
-    label: 'Manage Content',
-    icon: <FileIcon />,
-    path: 'admin/content',
-  },
-
-  {
-    label: 'Application Settings',
+    label: 'Main Settings',
     icon: <SettingsIcon />,
     path: 'admin/settings',
   },
+
 
 ]
 
