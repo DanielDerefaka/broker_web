@@ -13,12 +13,10 @@ const layout = async ({children}: Props) => {
 
     const authenticated = await onLoginUser()
 
-    if(!authenticated) return null 
+    if(!authenticated) redirect("/auth/sign-in");
 
 
-    const user = await currentUser();
-
-    if (user) redirect("/");
+ 
     return (
         <div className='flex h-screen w-full'>
             <SideBar/>
