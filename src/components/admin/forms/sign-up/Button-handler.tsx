@@ -29,7 +29,7 @@ const ButtonHandler = (props: Props) => {
         <p>
           Already have an account?
           <Link
-            href="/auth/sign-in"
+            href="/admin/sign-in"
             className="font-bold"
           >
             Sign In
@@ -61,10 +61,10 @@ const ButtonHandler = (props: Props) => {
         <p>
           Already have an account?{' '}
           <Link
-            href="/admin/auth/sign-in"
+            href="/admin/sign-in"
             className="font-bold"
           >
-            Sign In
+            Sign In Admin
           </Link>
         </p>
       </div>
