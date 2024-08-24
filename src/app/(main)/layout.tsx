@@ -1,5 +1,6 @@
 import { onLoginUser } from '@/actions/auth'
 import SideBar from '@/components/sidebar'
+import { currentUser } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
@@ -13,6 +14,11 @@ const layout = async ({children}: Props) => {
     const authenticated = await onLoginUser()
 
     if(!authenticated) return null 
+
+
+    const user = await currentUser();
+
+    if (user) redirect("/");
     return (
         <div className='flex h-screen w-full'>
             <SideBar/>

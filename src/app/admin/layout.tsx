@@ -1,5 +1,6 @@
 import { AdminLoginUser } from "@/actions/auth";
 import SideBar from "@/components/admin/sidebar";
+import { currentUser } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import React from "react";
 
@@ -12,6 +13,10 @@ const layout = async ({ children }: Props) => {
     const authenticated = await AdminLoginUser();
 
     if (!authenticated) return null;
+
+    const user = await currentUser();
+
+    if (user) redirect("/");
 
   return (
     <div className="flex h-screen w-full">
