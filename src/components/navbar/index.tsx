@@ -61,13 +61,9 @@ function NavBar() {
             <SheetHeader className="p-5">
               <Link href="/">Home</Link>
 
-              <Link href="/site/pricing">Pricing</Link>
-
-              <Link href="/site/about">About</Link>
-
-              <Link href="/site/features">Features</Link>
-
-              <Link href="/site/Faq">Faq</Link>
+              
+              <Link href="/auth/sign-up">Sign Up</Link>
+              <Link href="/auth/sign-in">Sign In</Link>
             </SheetHeader>
           </SheetContent>
         </Sheet>
