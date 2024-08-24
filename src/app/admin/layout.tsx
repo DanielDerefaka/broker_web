@@ -12,7 +12,7 @@ const layout = async ({ children }: Props) => {
 
     const authenticated = await AdminLoginUser();
 
-    if(!authenticated) redirect("/admin/sign-in");
+    if (!authenticated) return null;
 
   
 
