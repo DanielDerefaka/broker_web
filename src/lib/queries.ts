@@ -1304,6 +1304,16 @@ export async function getAllCurrency() {
   });
 }
 
+export async function deleteCurrency(id:any) {
+  return client.paymentMethod.delete({
+
+    where: {
+      id: id,
+    }
+ 
+  });
+}
+
 export async function getAllPaymentMethods() {
   return client.paymentMethod.findMany({
  

@@ -3,7 +3,7 @@ import CurrencyForm from '@/components/admin/currency/AdminCurrency'
 import AdminPaymentMethodForm from '@/components/admin/currency/AdminPayment'
 import BreadCrumb from '@/components/navbar/admin-breadcumb'
 import { Button } from '@/components/ui/button'
-import { getAllCurrency, getAllPaymentMethods, updatePaymentMethod } from '@/lib/queries'
+import { deleteCurrency, getAllCurrency, getAllPaymentMethods, updatePaymentMethod } from '@/lib/queries'
 import React, { useEffect, useState } from 'react'
 
 const Page = () => {
@@ -30,6 +30,12 @@ const Page = () => {
     await updatePaymentMethod(id, data);
     fetchPaymentMethods();
   };
+
+  const handleDelete = async (id:any) => {
+    await deleteCurrency(id);
+    fetchPaymentMethods();
+  };
+
 
   return (
     <div>
@@ -93,6 +99,12 @@ const Page = () => {
                         variant="outline"
                       >
                         Edit
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(method.id)}
+                        variant="outline"
+                      >
+                        Delete
                       </Button>
                     </div>
                   </div>
