@@ -20,10 +20,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
-import { getAllKyc, getAllKycId } from "@/lib/queries";
+import { getAllKyc, getAllKycId, ReduceBal } from "@/lib/queries";
 import Link from "next/link";
 import KYCVerificationById from "../kyc/KycVerDetails";
 import UpdateBalance from "./UpdateBalance";
+import ReduceBalance from "./ReduceBalance";
 
 interface UserDetailsProps {
   user: User & {
@@ -513,6 +514,7 @@ const UserDetails: React.FC<UserDetailsProps> = async ({ user }) => {
                 <CardContent className="p-6">
                  
                     <UpdateBalance  userId={user.clerkId}/>
+                    <ReduceBalance userId={user.clerkId} />
                 </CardContent>
               </Card>
             </div>

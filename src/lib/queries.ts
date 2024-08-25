@@ -1391,3 +1391,28 @@ export async function UpdateBal(userId:string, data: number) {
 }
 
 
+
+export async function ReduceBal(userId:string, data: number) {
+
+  console.log(data)
+ 
+   try {
+     const updatedUser = await client.user.update({
+       where: { clerkId: userId },
+ 
+       data: {
+         balance: {
+           decrement: data,
+         },
+       },
+     });
+ 
+     return updatedUser;
+   } catch (error) {
+     console.error('Error fetching investments:', error);
+     throw error;
+   
+ }
+ 
+ }
+ 
