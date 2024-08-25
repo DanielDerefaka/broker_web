@@ -1296,6 +1296,10 @@ export async function CurrencydC(data: any) {
 
 export async function getAllCurrency() {
   return client.currency.findMany({
+
+    where: {
+      isEnabled: true,
+    }
  
   });
 }
